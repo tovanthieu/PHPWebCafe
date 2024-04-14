@@ -1,27 +1,51 @@
 <?php
 require_once 'database/connect.php';
 session_start();
-// Kiểm tra xem người dùng đã đăng nhập chưa
-if (!isset($_SESSION['id'])) {
-    // Nếu không, chuyển hướng người dùng đến trang đăng nhập
-    header('Location: login.php');
-    exit;
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_to_cart'])) {
+  // Lấy ID của sản phẩm được nhấn vào
+  $product_id = $_POST['product_id'];
+
+  // Truy vấn để lấy thông tin chi tiết của sản phẩm từ CSDL
+  $sql_product = "SELECT * FROM product WHERE id = $product_id";
+  $result_product = $conn->query($sql_product);
+
+  // Kiểm tra xem sản phẩm có tồn tại hay không
+if ($result_product && $result_product->num_rows > 0) {
+  $row = $result_product->fetch_assoc();
+  $quantity = 1; // Define the quantity here
+  $product = array(
+      'id' => $product_id,
+      'name' => $row['name'],
+      'price' => $row['price'],
+      'quantity' => $quantity,
+      'image' => $row['image'], // Thêm thông tin ảnh vào session
+      'description' => $row['description'] // Thêm thông tin mô tả vào session
+  );
+  $_SESSION['cart'][] = $product;
 }
 
-// Lấy user_id của người dùng đã đăng nhập
-$user_id = $_SESSION['id'];
-
-// Truy vấn CSDL để lấy thông tin đơn hàng của người dùng
-$sql = "SELECT o.*, SUM(p.price) AS total_price
-        FROM orders o
-        INNER JOIN order_details od ON o.id = od.order_id
-        INNER JOIN product p ON od.product_id = p.id
-        WHERE o.user_id = $user_id
-        GROUP BY o.id
-        ORDER BY o.order_date DESC";
-    $result = $conn->query($sql);
+}
 
 
+// Xử lý tìm kiếm
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
+    $keyword = $_POST['keyword'];
+    $sql = "SELECT * FROM product WHERE name LIKE '%$keyword%'";
+} else {
+    $sql = "SELECT * FROM product";
+}
+
+// Xử lý sắp xếp
+if (isset($_GET['sort'])) {
+    $sort = $_GET['sort'];
+    if ($sort == 'asc') {
+        $sql .= " ORDER BY price ASC";
+    } elseif ($sort == 'desc') {
+        $sql .= " ORDER BY price DESC";
+    }
+}
+
+$result = $conn->query($sql);
 ?>
 
 
@@ -101,45 +125,61 @@ $sql = "SELECT o.*, SUM(p.price) AS total_price
       
 
         
-      <footer class="ftco-footer ftco-section img">
-      <?php
-               // Hiển thị thông tin đơn hàng
+      <section class="ftco-section">
+        <div class="container">
+            <div class="row justify-content-center mb-5 pb-3">
+                <div class="col-md-7 heading-section ftco-animate text-center">
+                    <span class="subheading"></span>
+                    <h2 class="mb-4">Sản Phẩm</h2>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Form tìm kiếm -->
+                <form method="post" action="menu.php">
+                    <div class="form-group">
+                        <input type="text" class="form-control" name="keyword" placeholder="Nhập từ khóa tìm kiếm">
+                    </div>
+                    <button type="submit" class="btn btn-primary" name="search">Tìm Kiếm</button>
+                </form>
+
+                <!-- Nút sắp xếp -->
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="sortDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Sắp Xếp
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="sortDropdown">
+                        <a class="dropdown-item" href="menu.php?sort=asc">Giá Tăng Dần</a>
+                        <a class="dropdown-item" href="menu.php?sort=desc">Giá Giảm Dần</a>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <?php
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
-                        // Hiển thị thông tin đơn hàng
-                        echo '<p>Số đơn hàng: ' . $row['id'] . '</p>';
-                        echo '<p>Ngày mua: ' . $row['order_date'] . '</p>';
-                        echo '<p>Tổng tiền: ' . $row['total_price'] . '</p>'; // Hiển thị tổng tiền
-                        echo '<p>Trạng thái: ' . $row['status'] . '</p>';
+                        // Hiển thị thông tin sản phẩm
+                  echo '<div class="col-md-3">';
+                  echo '<div class="menu-entry">';
+                  echo '<a href="#" class="img" style="background-image: url(\'anhsanpham/' . $row["image"] . '\');"></a>';
 
-                        // Lấy thông tin về các sản phẩm trong đơn hàng
-                        $order_id = $row['id'];
-                        $sql_products = "SELECT p.name AS product_name, p.price
-                                        FROM order_details od
-                                        INNER JOIN product p ON od.product_id = p.id
-                                        WHERE od.order_id = $order_id";
-                        $result_products = $conn->query($sql_products);
-
-                        if ($result_products->num_rows > 0) {
-                            echo '<ul>';
-                            while ($product_row = $result_products->fetch_assoc()) {
-                                echo '<li>';
-                                echo 'Tên sản phẩm: ' . $product_row['product_name'] . ', Giá: ' . $product_row['price'];
-                                echo '</li>';
-                            }
-                            echo '</ul>';
-                        } else {
-                            echo 'Không có sản phẩm nào trong đơn hàng này.';
-                        }
-
-                        echo '<hr>'; // Phân chia giữa các đơn hàng
-                    }
-                } else {
-                    echo 'Không có đơn hàng nào.';
-                }
-            ?>
-
-     </footer>
+                  echo '<div class="text text-center pt-4">';
+                  echo '<h3><a href="#">' . $row["name"] . '</a></h3>';
+                  echo '<p class="price"><span>' . $row["price"] . '</span></p>';
+                  echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
+                  echo '<input type="hidden" name="product_id" value="' . $row["id"] . '">'; // Input hidden để chứa ID của sản phẩm
+                  echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
+                  echo '</form>';
+                  echo '</div>';
+                  echo '</div>';
+                  echo '</div>';
+              }
+          } else {
+              echo "Không có sản phẩm nào.";
+          }
+					?>
+				</div>
+			</div>
+		</section>
 
         
 		

@@ -1,29 +1,3 @@
-<?php
-require_once 'database/connect.php';
-session_start();
-// Kiểm tra xem người dùng đã đăng nhập chưa
-if (!isset($_SESSION['id'])) {
-    // Nếu không, chuyển hướng người dùng đến trang đăng nhập
-    header('Location: login.php');
-    exit;
-}
-
-// Lấy user_id của người dùng đã đăng nhập
-$user_id = $_SESSION['id'];
-
-// Truy vấn CSDL để lấy thông tin đơn hàng của người dùng
-$sql = "SELECT o.*, SUM(p.price) AS total_price
-        FROM orders o
-        INNER JOIN order_details od ON o.id = od.order_id
-        INNER JOIN product p ON od.product_id = p.id
-        WHERE o.user_id = $user_id
-        GROUP BY o.id
-        ORDER BY o.order_date DESC";
-    $result = $conn->query($sql);
-
-
-?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -66,8 +40,8 @@ $sql = "SELECT o.*, SUM(p.price) AS total_price
 	      <div class="collapse navbar-collapse" id="ftco-nav">
 	        <ul class="navbar-nav ml-auto">
 	          <li class="nav-item active"><a href="index.php" class="nav-link">Trang chủ</a></li>
-	          <li class="nav-item"><a href="menu.php" class="nav-link">Danh Mục</a></li>
-	          <li class="nav-item"><a href="about.php" class="nav-link">Giới Thiệu</a></li>
+	          <li class="nav-item"><a href="menu.html" class="nav-link">Danh Mục</a></li>
+	          <li class="nav-item"><a href="about.html" class="nav-link">Giới Thiệu</a></li>
 	          
             </li>
 
@@ -98,47 +72,14 @@ $sql = "SELECT o.*, SUM(p.price) AS total_price
 	      </div>
 		  </div>
 	  </nav>
+    <div id="fb-root">
       
+    </div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v19.0" nonce="1gBWTLGP"></script>
 
         
       <footer class="ftco-footer ftco-section img">
-      <?php
-               // Hiển thị thông tin đơn hàng
-                if ($result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                        // Hiển thị thông tin đơn hàng
-                        echo '<p>Số đơn hàng: ' . $row['id'] . '</p>';
-                        echo '<p>Ngày mua: ' . $row['order_date'] . '</p>';
-                        echo '<p>Tổng tiền: ' . $row['total_price'] . '</p>'; // Hiển thị tổng tiền
-                        echo '<p>Trạng thái: ' . $row['status'] . '</p>';
-
-                        // Lấy thông tin về các sản phẩm trong đơn hàng
-                        $order_id = $row['id'];
-                        $sql_products = "SELECT p.name AS product_name, p.price
-                                        FROM order_details od
-                                        INNER JOIN product p ON od.product_id = p.id
-                                        WHERE od.order_id = $order_id";
-                        $result_products = $conn->query($sql_products);
-
-                        if ($result_products->num_rows > 0) {
-                            echo '<ul>';
-                            while ($product_row = $result_products->fetch_assoc()) {
-                                echo '<li>';
-                                echo 'Tên sản phẩm: ' . $product_row['product_name'] . ', Giá: ' . $product_row['price'];
-                                echo '</li>';
-                            }
-                            echo '</ul>';
-                        } else {
-                            echo 'Không có sản phẩm nào trong đơn hàng này.';
-                        }
-
-                        echo '<hr>'; // Phân chia giữa các đơn hàng
-                    }
-                } else {
-                    echo 'Không có đơn hàng nào.';
-                }
-            ?>
-
+      <div class="fb-page" data-href="https://www.facebook.com/profile.php?id=100093193560707" data-tabs="" data-width="500" data-height="" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"><blockquote cite="https://www.facebook.com/profile.php?id=100093193560707" class="fb-xfbml-parse-ignore"><a href="https://www.facebook.com/profile.php?id=100093193560707">SunDay Cafe</a></blockquote></div>
      </footer>
 
         

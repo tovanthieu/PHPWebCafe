@@ -75,8 +75,8 @@ if ($result_product && $result_product->num_rows > 0) {
 	      <div class="collapse navbar-collapse" id="ftco-nav">
 	        <ul class="navbar-nav ml-auto">
 	          <li class="nav-item active"><a href="index.php" class="nav-link">Trang chủ</a></li>
-	          <li class="nav-item"><a href="menu.html" class="nav-link">Danh Mục</a></li>
-	          <li class="nav-item"><a href="about.html" class="nav-link">Giới Thiệu</a></li>
+	          <li class="nav-item"><a href="menu.php" class="nav-link">Danh Mục</a></li>
+	          <li class="nav-item"><a href="about.php" class="nav-link">Giới Thiệu</a></li>
 	          
             </li>
 
@@ -200,7 +200,7 @@ if ($result_product && $result_product->num_rows > 0) {
                 echo '<div class="text">';
                 echo '<h3><a href="#">' . $row_product["name"] . '</a></h3>';
                 echo '<p>' . $row_product["description"] . '</p>';
-                echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
+                echo '<p class="price"><span>' . $row_product["price"] . '</span></p>';
                 echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
                 echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
                 echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
@@ -231,7 +231,7 @@ if ($result_product && $result_product->num_rows > 0) {
                 echo '<div class="text">';
                 echo '<h3><a href="#">' . $row_product["name"] . '</a></h3>';
                 echo '<p>' . $row_product["description"] . '</p>';
-                echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
+                echo '<p class="price"><span>' . $row_product["price"] . '</span></p>';
                 echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
                 echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
                 echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
@@ -262,7 +262,7 @@ if ($result_product && $result_product->num_rows > 0) {
                 echo '<div class="text">';
                 echo '<h3><a href="#">' . $row_product["name"] . '</a></h3>';
                 echo '<p>' . $row_product["description"] . '</p>';
-                echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
+                echo '<p class="price"><span>' . $row_product["price"] . '</span></p>';
                 echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
 echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
 echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
@@ -308,7 +308,7 @@ echo '</form>';
 
                   echo '<div class="text text-center pt-4">';
                   echo '<h3><a href="#">' . $row["name"] . '</a></h3>';
-                  echo '<p class="price"><span>$' . $row["price"] . '</span></p>';
+                  echo '<p class="price"><span>' . $row["price"] . '</span></p>';
                   echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
                   echo '<input type="hidden" name="product_id" value="' . $row["id"] . '">'; // Input hidden để chứa ID của sản phẩm
                   echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
