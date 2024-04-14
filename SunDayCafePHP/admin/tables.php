@@ -1,4 +1,11 @@
 <?php
+// Kết nối đến cơ sở dữ liệu
+$conn = new mysqli('localhost', 'root', '', 'sundaycafe');
+
+// Kiểm tra kết nối
+if ($conn->connect_error) {
+    die("Kết nối đến cơ sở dữ liệu thất bại: " . $conn->connect_error);
+}
 session_start();
 
 // Kiểm tra đăng nhập
@@ -7,7 +14,14 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['r
     header("Location: unauthorized.php");
     exit();
 }
+
+// Truy vấn dữ liệu từ bảng đơn hàng
+$sql_orders = "SELECT * FROM orders";
+$result_orders = $conn->query($sql_orders);
 ?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,7 +33,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['r
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Admin</title>
+    <title>Admin - Quản lý đơn hàng</title>
 `
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -29,7 +43,22 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['r
 
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <style>
+        .order-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px; /* Khoảng cách giữa các mục */
+        }
 
+        .order-item {
+            flex: 0 0 calc(33.33% - 20px); /* Chiều rộng của mỗi mục */
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -111,14 +140,49 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['r
 
 
         </ul>
-
+        <div id="wrapper">
+        <!-- Sidebar -->
+        <!-- Your sidebar code here -->
+        <div class="content">
+            <h1 class="mb-4">Quản lý đơn hàng</h1>
+            <div class="order-list">
+                <?php if ($result_orders->num_rows > 0) : ?>
+                    <?php while ($row = $result_orders->fetch_assoc()) : ?>
+                        <div class="order-item">
+                            <h5>Mã đơn hàng: <?php echo $row['id']; ?></h5>
+                            <p>Giá: <?php echo $row['total_price']; ?></p>
+                            <p>Ngày mua: <?php echo $row['order_date']; ?></p>
+                            <p>Trạng thái: <?php echo $row['status']; ?></p>
+                     
+                              <a href="chitietdonhang.php?id=<?php echo $row['id']; ?>" class="btn btn-info">Chi tiết đơn hàng</a>
+                            <form method="post" action="update_order_status.php">
+                                <!-- Thêm một input ẩn để lưu ID của đơn hàng -->
+                                <input type="hidden" name="order_id" value="<?php echo $row['id']; ?>">
+                                <!-- Nút xác nhận để chuyển trạng thái của đơn hàng -->
+                                <button type="submit" name="update_status" class="btn btn-success status-btn">Chuyển sang đã thanh toán</button>
+                            </form>
+                        </div>
+                    <?php endwhile; ?>
+                <?php else : ?>
+                    <p>Không có đơn hàng nào.</p>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
+
+
+
+
+    
     <!-- End of Page Wrapper -->
 
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
+
+    
+
 
     <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>
@@ -140,3 +204,12 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['r
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+

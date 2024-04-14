@@ -44,10 +44,12 @@ $sql_order = "CREATE TABLE IF NOT EXISTS orders (
     user_id INT,
     total_price DECIMAL(10, 2),
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(255) DEFAULT 'pending',
+    status VARCHAR(255) DEFAULT 'Chưa Thanh Toán',
+    payment_status VARCHAR(255) DEFAULT 'unpaid', -- Thêm trường payment_status
     FOREIGN KEY (user_id) REFERENCES user(id)
 )";
 
+$sql_order_alter = "ALTER TABLE orders MODIFY COLUMN id INT AUTO_INCREMENT";
 // Tạo bảng chi tiết đơn hàng
 $sql_order_details = "CREATE TABLE IF NOT EXISTS order_details (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,25 +59,12 @@ $sql_order_details = "CREATE TABLE IF NOT EXISTS order_details (
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES product(id)
 )";
-
-// Tạo bảng lịch sử mua hàng
-$sql_purchase_history = "CREATE TABLE IF NOT EXISTS purchase_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    order_id INT,
-    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES user(id),
-    FOREIGN KEY (order_id) REFERENCES orders(id)
-)";
-
-// Thực thi các câu lệnh tạo bảng
 $conn->query($sql_role);
 $conn->query($sql_user);
 $conn->query($sql_category);
 $conn->query($sql_product);
 $conn->query($sql_order);
+$conn->query($sql_order_alter); 
 $conn->query($sql_order_details);
-$conn->query($sql_purchase_history);
-
 ?>
 Cơ sở dữ liệu đã được tạo thành công!

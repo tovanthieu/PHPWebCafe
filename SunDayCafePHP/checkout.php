@@ -1,66 +1,57 @@
 <?php
-require_once 'database/connect.php';
+// Bắt đầu phiên làm việc
 session_start();
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = array();
-}
 
-// Xử lý thêm sản phẩm vào giỏ hàng nếu có dữ liệu được gửi từ form
-if (isset($_POST['add_to_cart'])) {
-    // Lấy thông tin sản phẩm từ form
-    $product_id = $_POST['product_id'];
-    $quantity = $_POST['quantity'];
+// Kết nối đến cơ sở dữ liệu
+require_once 'database/connect.php';
 
-    // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
-    $index = array_search($product_id, array_column($_SESSION['cart'], 'id'));
-    if ($index !== false) {
-        // Nếu sản phẩm đã tồn tại, tăng số lượng lên
-        $_SESSION['cart'][$index]['quantity'] += $quantity;
-    } else {
-        // Nếu sản phẩm chưa tồn tại, lấy thông tin sản phẩm từ CSDL và thêm vào giỏ hàng
-        $sql = "SELECT * FROM product WHERE id = $product_id";
-        $result = $conn->query($sql);
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $product = array(
-                'id' => $product_id,
-                'name' => $row['name'],
-                'price' => $row['price'],
-                'quantity' => $quantity
-            );
-            $_SESSION['cart'][] = $product;
-        }
-    }
-}
+// Khởi tạo biến $cart và $total_price
+$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
 // Tính toán tổng tiền
 $total_price = 0;
 foreach ($_SESSION['cart'] as $product) {
     $total_price += $product['price'] * $product['quantity'];
 }
 
-// Xử lý cập nhật số lượng sản phẩm nếu có dữ liệu được gửi từ form
-if (isset($_POST['update_quantity'])) {
-    $product_id = $_POST['product_id'];
-    $quantity = $_POST['quantity'];
-
-    // Kiểm tra xem số lượng có hợp lệ không
-    if ($quantity <= 0) {
-        // Xóa sản phẩm khỏi giỏ hàng nếu số lượng là 0 hoặc âm
-        $index = array_search($product_id, array_column($_SESSION['cart'], 'id'));
-        if ($index !== false) {
-            unset($_SESSION['cart'][$index]);
-        }
-    } else {
-        // Cập nhật số lượng sản phẩm trong giỏ hàng
-        $index = array_search($product_id, array_column($_SESSION['cart'], 'id'));
-        if ($index !== false) {
-            $_SESSION['cart'][$index]['quantity'] = $quantity;
-        }
-    }
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['id'])) {
+    // Nếu chưa đăng nhập, chuyển hướng đến trang đăng nhập
+    header("Location: login.php");
+    exit();
 }
 
-?>
+// Xử lý khi người dùng nhấn nút "Thanh toán"
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["checkout"])) {
+    // Lấy thông tin người dùng từ session
+    $id = $_SESSION['id'];
 
+    // Tạo đơn hàng
+    $sql_create_order = "INSERT INTO orders (user_id, total_price) VALUES (?, ?)";
+    $stmt = $conn->prepare($sql_create_order);
+    $stmt->bind_param("id", $id, $total_price);
+    $stmt->execute();
+
+    // Lấy ID của đơn hàng vừa tạo
+    $order_id = $stmt->insert_id;
+
+    // Tạo chi tiết đơn hàng
+    foreach ($cart as $product) {
+        $product_id = $product['id'];
+        $quantity = $product['quantity'];
+        $sql_create_order_detail = "INSERT INTO order_details (order_id, product_id, quantity) VALUES (?, ?, ?)";
+        $stmt = $conn->prepare($sql_create_order_detail);
+        $stmt->bind_param("iii", $order_id, $product_id, $quantity);
+        $stmt->execute();
+    }
+
+    // Xóa giỏ hàng sau khi thanh toán
+    unset($_SESSION['cart']);
+
+    // Chuyển hướng người dùng đến trang hoàn thành thanh toán
+    header("Location: checkout_success.php");
+    exit();
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -91,6 +82,7 @@ if (isset($_POST['update_quantity'])) {
     <link rel="stylesheet" href="css/flaticon.css">
     <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/style.css">
+    
   </head>
   <body>
   	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
@@ -107,10 +99,11 @@ if (isset($_POST['update_quantity'])) {
 	          
             </li>
 
-	          <li class="nav-item cart"><a href="cart.html" class="nav-link"><span class="icon icon-shopping_cart"></span></a></li>
+	          <li class="nav-item cart"><a href="cart.php" class="nav-link"><span class="icon icon-shopping_cart"></span></a></li>
             <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="room.html" id="dropdown04" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <?php
+  
         if (isset($_SESSION['username'])) {
             echo $_SESSION['username'];
         } else {
@@ -133,51 +126,30 @@ if (isset($_POST['update_quantity'])) {
 	      </div>
 		  </div>
 	  </nav>
-    <!-- END nav -->
-	
+      
+      <title>Checkout</title>
+        
+      <footer class="ftco-footer ftco-section img">
+      <!-- Hiển thị thông tin giỏ hàng và tổng tiền -->
+     <div>
+        <!-- Hiển thị sản phẩm trong giỏ hàng -->
+        <h2>Giỏ hàng của bạn:</h2>
+        <ul>
+            <?php foreach ($cart as $product): ?>
+                <li><?php echo $product['name']; ?> - <?php echo $product['quantity']; ?> x <?php echo $product['price']; ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <p>Tổng tiền: <?php echo $total_price; ?></p>
+    </div>
 
-    <section class="ftco-section">
-			<div class="container">
-				<div class="row justify-content-center mb-5 pb-3">
-					<div class="col-md-7 heading-section ftco-animate text-center">
-						<span class="subheading"></span>
-						<h2 class="mb-4">Sản Phẩm</h2>
-					</div>
-				</div>
-				<div class="row">
-                <?php
-                    // Kiểm tra nếu giỏ hàng không trống
-                    if (!empty($_SESSION['cart'])) {
-                        foreach ($_SESSION['cart'] as $product_id => $product) {
-                            echo '<div class="product">';
-                            echo '<img src="anhsanpham/' . $product['image'] . '" alt="' . $product['name'] . '" style="width: 100px; height: auto;">';
+    <!-- Nút thanh toán -->
+    <form method="post" action="">
+        <input type="submit" name="checkout" value="Thanh toán">
+    </form>
+     </footer>
 
-                            echo '<div class="info">';
-                            echo '<h3>' . $product['name'] . '</h3>';
-                            echo '<p>' . $product['description'] . '</p>';
-                            echo '<p>Giá:' . $product['price'] . '</p>';
-                            echo '<p>Số lượng: ' . $product['quantity'] . '</p>';
-                            // Thêm form cập nhật số lượng sản phẩm
-                            echo '<form method="post" action="">';
-                            echo '<p>Số lượng: <input type="number" name="quantity" value="' . $product['quantity'] . '" min="1"></p>';
-                            echo '<input type="hidden" name="product_id" value="' . $product['id'] . '">';
-                            echo '<input type="hidden" name="update_quantity" value="true">';
-                            echo '<input type="submit" value="Cập nhật">';
-                            echo '</form>';
-                            // Thêm nút "Xóa sản phẩm"
-                            echo '<a href="remove_from_cart.php?id=' . $product['id'] . '">Xóa sản phẩm</a>';
-                            echo '</div>';
-                            echo '</div>';
-                        }
-                    }
-                    ?>
-
-				</div>
-			</div>
-		</section>
-        <!-- Hiển thị tổng tiền -->
-        <div id="total-price">Tổng tiền: <?php echo number_format($total_price, 2); ?></div>
-        <a href="checkout.php" class="btn btn-primary">Thanh toán hóa đơn</a>
+        
+		
 
     <footer class="ftco-footer ftco-section img">
     <div class="overlay"></div>

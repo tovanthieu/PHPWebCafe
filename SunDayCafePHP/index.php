@@ -22,6 +22,10 @@ if ($result_product && $result_product->num_rows > 0) {
       'description' => $row['description'] // Thêm thông tin mô tả vào session
   );
   $_SESSION['cart'][] = $product;
+  // Trả về thông báo kết quả
+  echo "Thêm sản phẩm vào giỏ hàng thành công!";
+} else {
+  echo "Không tìm thấy sản phẩm.";
 }
 
 }
@@ -91,7 +95,7 @@ if ($result_product && $result_product->num_rows > 0) {
     <div class="dropdown-menu" aria-labelledby="dropdown04">
         <?php
         if (isset($_SESSION['username'])) {
-            echo '<a class="dropdown-item" href="#">Xem thông tin mua hàng</a>';
+            echo '<a class="dropdown-item" href="order_history.php">Xem thông tin mua hàng</a>';
             echo '<a class="dropdown-item" href="logout.php">Đăng xuất</a>';
         } else {
             echo '<a class="dropdown-item" href="login.php">Đăng Nhập</a>';
@@ -198,9 +202,9 @@ if ($result_product && $result_product->num_rows > 0) {
                 echo '<p>' . $row_product["description"] . '</p>';
                 echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
                 echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
-echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
-echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
-echo '</form>';
+                echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
+                echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
+                echo '</form>';
                 echo '</div>';
                 echo '</div>';
                 echo '</div>';
@@ -229,9 +233,9 @@ echo '</form>';
                 echo '<p>' . $row_product["description"] . '</p>';
                 echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
                 echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
-echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
-echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
-echo '</form>';
+                echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
+                echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
+                echo '</form>';
                 echo '</div>';
                 echo '</div>';
                 echo '</div>';
@@ -391,7 +395,21 @@ echo '</form>';
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVWaKrjvy3MaE7SQ74_uJiULgl1JY0H2s&sensor=false"></script>
   <script src="js/google-map.js"></script>
   <script src="js/main.js"></script>
-    
+  <script>
+  $(document).ready(function(){
+    $('.add-to-cart-btn').click(function(){
+      var product_id = $(this).attr('data-product-id');
+      $.ajax({
+        type: 'POST',
+        url: 'add_to_cart.php',
+        data: { product_id: product_id },
+        success: function(response){
+          alert(response); // Hiển thị thông báo kết quả
+        }
+      });
+    });
+  });
+</script>  
   </body>
 </html>
 

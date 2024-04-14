@@ -2,12 +2,15 @@
 session_start();
 
 require_once 'database/connect.php';
+
+
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
     // Kiểm tra thông tin đăng nhập
-    $sql = "SELECT username, email, role_id, password FROM user WHERE username = ?";
+    $sql = "SELECT username, email, id, password FROM user WHERE username = ?";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
@@ -21,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Kiểm tra mật khẩu
         if (password_verify($password, $user['password'])) {
             // Đăng nhập thành công, lưu thông tin người dùng vào session
-            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['role_id'] = $user['role_id'];
