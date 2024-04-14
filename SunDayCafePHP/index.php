@@ -1,17 +1,32 @@
 <?php
-// Thực hiện kết nối đến MySQL Database
-$servername = "localhost"; // Thay đổi nếu cần thiết
-$username = "root"; // Thay đổi username
-$password = ""; // Thay đổi password
-$dbname = "sundaycafe"; // Thay đổi tên database
+require_once 'database/connect.php';
+session_start();
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_to_cart'])) {
+  // Lấy ID của sản phẩm được nhấn vào
+  $product_id = $_POST['product_id'];
 
-// Tạo kết nối
-$conn = new mysqli($servername, $username, $password, $dbname);
+  // Truy vấn để lấy thông tin chi tiết của sản phẩm từ CSDL
+  $sql_product = "SELECT * FROM product WHERE id = $product_id";
+  $result_product = $conn->query($sql_product);
 
-// Kiểm tra kết nối
-if ($conn->connect_error) {
-    die("Kết nối CSDL thất bại: " . $conn->connect_error);
+  // Kiểm tra xem sản phẩm có tồn tại hay không
+if ($result_product && $result_product->num_rows > 0) {
+  $row = $result_product->fetch_assoc();
+  $quantity = 1; // Define the quantity here
+  $product = array(
+      'id' => $product_id,
+      'name' => $row['name'],
+      'price' => $row['price'],
+      'quantity' => $quantity,
+      'image' => $row['image'], // Thêm thông tin ảnh vào session
+      'description' => $row['description'] // Thêm thông tin mô tả vào session
+  );
+  $_SESSION['cart'][] = $product;
 }
+
+}
+
+
 ?>
 
 
@@ -44,6 +59,7 @@ if ($conn->connect_error) {
     <link rel="stylesheet" href="css/flaticon.css">
     <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/style.css">
+    
   </head>
   <body>
   	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
@@ -60,13 +76,29 @@ if ($conn->connect_error) {
 	          
             </li>
 
-	          <li class="nav-item cart"><a href="cart.html" class="nav-link"><span class="icon icon-shopping_cart"></span><span class="bag d-flex justify-content-center align-items-center"><small>1</small></span></a></li>
-			  <li class="nav-item dropdown">
-				<a class="nav-link dropdown-toggle" href="room.html" id="dropdown04" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tài khoản</a>
-				<div class="dropdown-menu" aria-labelledby="dropdown04">
-					<a class="dropdown-item" href="login.php">Đăng Nhập</a>
-					<a class="dropdown-item" href="login.php">Đăng ký</a>
-				</div>
+	          <li class="nav-item cart"><a href="cart.php" class="nav-link"><span class="icon icon-shopping_cart"></span></a></li>
+            <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="room.html" id="dropdown04" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <?php
+  
+        if (isset($_SESSION['username'])) {
+            echo $_SESSION['username'];
+        } else {
+            echo 'Tài khoản';
+        }
+        ?>
+    </a>
+    <div class="dropdown-menu" aria-labelledby="dropdown04">
+        <?php
+        if (isset($_SESSION['username'])) {
+            echo '<a class="dropdown-item" href="#">Xem thông tin mua hàng</a>';
+            echo '<a class="dropdown-item" href="logout.php">Đăng xuất</a>';
+        } else {
+            echo '<a class="dropdown-item" href="login.php">Đăng Nhập</a>';
+            echo '<a class="dropdown-item" href="register.php">Đăng ký</a>';
+        }
+        ?>
+    </div>
 			</ul>
 	      </div>
 		  </div>
@@ -159,13 +191,16 @@ if ($conn->connect_error) {
 
 
                 echo '<div class="col-md-4 text-center">';
-				echo '<div class="menu-wrap">';
+				        echo '<div class="menu-wrap">';
                 echo '<a href="#" class="menu-img img mb-4" style="background-image: url(anhsanpham/' . $row_product["image"] . ');"></a>'; // Đường dẫn tới thư mục chứa ảnh sản phẩm
                 echo '<div class="text">';
                 echo '<h3><a href="#">' . $row_product["name"] . '</a></h3>';
                 echo '<p>' . $row_product["description"] . '</p>';
                 echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
-                echo '<p><a href="#" class="btn btn-primary btn-outline-primary">Add to cart</a></p>';
+                echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
+echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
+echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
+echo '</form>';
                 echo '</div>';
                 echo '</div>';
                 echo '</div>';
@@ -193,7 +228,10 @@ if ($conn->connect_error) {
                 echo '<h3><a href="#">' . $row_product["name"] . '</a></h3>';
                 echo '<p>' . $row_product["description"] . '</p>';
                 echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
-                echo '<p><a href="#" class="btn btn-primary btn-outline-primary">Add to cart</a></p>';
+                echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
+echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
+echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
+echo '</form>';
                 echo '</div>';
                 echo '</div>';
                 echo '</div>';
@@ -221,7 +259,10 @@ if ($conn->connect_error) {
                 echo '<h3><a href="#">' . $row_product["name"] . '</a></h3>';
                 echo '<p>' . $row_product["description"] . '</p>';
                 echo '<p class="price"><span>$' . $row_product["price"] . '</span></p>';
-                echo '<p><a href="#" class="btn btn-primary btn-outline-primary">Add to cart</a></p>';
+                echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
+echo '<input type="hidden" name="product_id" value="' . $row_product["id"] . '">'; // Input hidden để chứa ID của sản phẩm
+echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
+echo '</form>';
                 echo '</div>';
                 echo '</div>';
                 echo '</div>';
@@ -252,26 +293,29 @@ if ($conn->connect_error) {
 					$sql = "SELECT * FROM product ORDER BY id DESC LIMIT 33"; // Giả sử bảng sản phẩm có tên là "product"
 					$result = $conn->query($sql);
 
-					// Kiểm tra và hiển thị sản phẩm
-					if ($result->num_rows > 0) {
-						// Duyệt qua từng hàng dữ liệu
-						while ($row = $result->fetch_assoc()) {
-							// Hiển thị thông tin sản phẩm
-							echo '<div class="col-md-3">';
-							echo '<div class="menu-entry">';
-							echo '<a href="#" class="img" style="background-image: url(\'anhsanpham/' . $row["image"] . '\');"></a>';
+					 // Kiểm tra và hiển thị sản phẩm
+            if ($result->num_rows > 0) {
+              // Duyệt qua từng hàng dữ liệu
+              while ($row = $result->fetch_assoc()) {
+                  // Hiển thị thông tin sản phẩm
+                  echo '<div class="col-md-3">';
+                  echo '<div class="menu-entry">';
+                  echo '<a href="#" class="img" style="background-image: url(\'anhsanpham/' . $row["image"] . '\');"></a>';
 
-							echo '<div class="text text-center pt-4">';
-							echo '<h3><a href="#">' . $row["name"] . '</a></h3>';
-							echo '<p class="price"><span>$' . $row["price"] . '</span></p>';
-							echo '<p><a href="#" class="btn btn-primary btn-outline-primary">Add to Cart</a></p>';
-							echo '</div>';
-							echo '</div>';
-							echo '</div>';
-						}
-					} else {
-						echo "Không có sản phẩm nào.";
-					}
+                  echo '<div class="text text-center pt-4">';
+                  echo '<h3><a href="#">' . $row["name"] . '</a></h3>';
+                  echo '<p class="price"><span>$' . $row["price"] . '</span></p>';
+                  echo '<form method="post" action="index.php">'; // Đặt action là index.php để xử lý khi người dùng nhấn nút "Thêm Vào Giỏ Hàng"
+                  echo '<input type="hidden" name="product_id" value="' . $row["id"] . '">'; // Input hidden để chứa ID của sản phẩm
+                  echo '<p><button type="submit" class="btn btn-primary btn-outline-primary" name="add_to_cart">Thêm Vào Giỏ Hàng</button></p>';
+                  echo '</form>';
+                  echo '</div>';
+                  echo '</div>';
+                  echo '</div>';
+              }
+          } else {
+              echo "Không có sản phẩm nào.";
+          }
 					?>
 				</div>
 			</div>

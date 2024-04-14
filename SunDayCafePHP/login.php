@@ -1,6 +1,45 @@
 <?php
 session_start();
 
+require_once 'database/connect.php';
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST["username"];
+    $password = $_POST["password"];
+
+    // Kiểm tra thông tin đăng nhập
+    $sql = "SELECT username, email, role_id, password FROM user WHERE username = ?";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows == 1) {
+        // Lấy dữ liệu người dùng từ kết quả truy vấn
+        $user = $result->fetch_assoc();
+
+        // Kiểm tra mật khẩu
+        if (password_verify($password, $user['password'])) {
+            // Đăng nhập thành công, lưu thông tin người dùng vào session
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['role_id'] = $user['role_id'];
+
+            // Chuyển hướng người dùng đến trang chính sau khi đăng nhập thành công
+            header("Location: index.php");
+            exit();
+        } else {
+            // Đăng nhập không thành công, chuyển hướng trở lại trang đăng nhập với thông báo lỗi
+            header("Location: login.php?error=1");
+            exit();
+        }
+    } else {
+        // Người dùng không tồn tại, chuyển hướng trở lại trang đăng nhập với thông báo lỗi
+        header("Location: login.php?error=1");
+        exit();
+    }
+}
 // Kiểm tra nếu có biến session 'registration_success' được thiết lập
 if (isset($_SESSION['registration_success'])) {
     // Hiển thị thông báo đăng ký thành công
